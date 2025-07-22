@@ -120,7 +120,7 @@ while (true) {
     slct = await rl.question(`Your selection: `);
     i = Number(slct);
     d = dice[i];
-    console.log(`Youve selected die ${JSON.stringify(d.faces)}`)
+    console.log(`Youve selected die ${JSON.stringify(d.getfaces())}`)
     r = d.roll();
 
     evdnc = hmac(0, dice.length);
