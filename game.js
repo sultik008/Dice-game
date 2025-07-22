@@ -147,7 +147,7 @@ while (true) {
     evdnc = hmac(0, dice.length);
     bi = evdnc.rndm;
     bd = dice[bi];
-    console.log(`Ive selected die ${JSON.stringify(bd.faces)}`)
+    console.log(`Ive selected die ${JSON.stringify(bd.getfaces())}`)
     br = bd.roll();
 
     
@@ -159,9 +159,9 @@ while (true) {
     slct = await rl.question(`Your selection: `);
     i = Number(slct);
     d = dice[i];
-    console.log(`Youve selected die ${JSON.stringify(d)}`)
+    console.log(`Youve selected die ${JSON.stringify(d.getfaces())}`)
     r = d.roll();
-    console.log(`Ive rolled ${br} (my number ${bi}) (KEY=${evdnc.key})`);
+    console.log(`Ive rolled ${br} (Die ${bi}) (KEY=${evdnc.key})`);
     console.log(`Youve rolled ${r} (Die ${i})`);
 
     if (r > br) {

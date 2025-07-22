@@ -5,9 +5,6 @@ export default class Die {
   constructor(faces) {
     this.faces = faces;
   }
-  getface(i) {
-    return this.faces[i];
-  }
   getfaces() {
     return this.faces;
   }
