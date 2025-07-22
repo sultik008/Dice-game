@@ -98,8 +98,7 @@ while (true) {
   console.log(` ${slct}\n My number: ${evdnc.rndm} (key=${evdnc.key})`);
 
   if (slct === "x") {
-    rl.close();
-    break;
+    process.exit(1)
   }
 
   if (slct === "?") {
