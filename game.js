@@ -150,7 +150,7 @@ while (true) {
     console.log(`Ive selected die ${JSON.stringify(bd.faces)}`)
     br = bd.roll();
 
-    console.log(`Ive rolled ${br} (my number ${bi}) (KEY=${evdnc.key})`);
+    
 
     for (let i = 0; i < dice.length; i++) {
       console.log(`${i} - ${JSON.stringify(dice[i].faces)}`);
@@ -161,7 +161,7 @@ while (true) {
     d = dice[i];
     console.log(`Youve selected die ${JSON.stringify(d)}`)
     r = d.roll();
-
+    console.log(`Ive rolled ${br} (my number ${bi}) (KEY=${evdnc.key})`);
     console.log(`Youve rolled ${r} (Die ${i})`);
 
     if (r > br) {
