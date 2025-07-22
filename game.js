@@ -120,6 +120,7 @@ while (true) {
     slct = await rl.question(`Your selection: `);
     i = Number(slct);
     d = dice[i];
+    console.log(`Youve selected die ${JSON.stringify(d.faces)}`)
     r = d.roll();
 
     evdnc = hmac(0, dice.length);
@@ -144,10 +145,9 @@ while (true) {
     console.log("Youve lost, Iam throwing first");
 
     evdnc = hmac(0, dice.length);
-    console.log(dice)
     bi = evdnc.rndm;
     bd = dice[bi];
-    console.log(`Ive selected die ${JSON.stringify(bd)}`)
+    console.log(`Ive selected die ${JSON.stringify(bd.faces)}`)
     br = bd.roll();
 
     console.log(`Ive rolled ${br} (my number ${bi}) (KEY=${evdnc.key})`);
