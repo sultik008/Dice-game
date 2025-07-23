@@ -1,7 +1,7 @@
 import { randomInt, randomBytes, createHmac } from "crypto";
 import Readline from "readline/promises";
 import Die from "./die.js";
-import ASCii from 'ascii-table';
+import ASCii from "ascii-table";
 
 const args = process.argv.slice(2);
 
@@ -9,20 +9,22 @@ function check() {
   if (!args.length) {
     console.log("Write params");
     process.exit(1);
-  } else if (args.length <= 1)
-    console.log("write 2 or more params"), process.exit(1);
+  } else if (args.length <= 1) {
+    console.log("write 2 or more params");
+    process.exit(1);
+  }
+
   for (let i = 0; i < args.length; i++) {
-    args[i] = args[i].split(",");
-    for (let y = 0; y < args[i].length; y++) {
-      let num = Number.parseInt(args[i][y]);
-      if (Number.isInteger(num)) {
-        args[i][y] = num;
-      } else {
+    args[i] = args[i].split(",").map((x) => {
+      const num = Number.parseInt(x);
+      if (!Number.isInteger(num)) {
         console.log("All faces must be integers");
         process.exit(1);
       }
-    }
+      return num;
+    });
   }
+
   for (let i = 0; i < args.length; i++) {
     if (args[i].length !== 6) {
       console.log("All dice must have 6 faces");
@@ -30,42 +32,38 @@ function check() {
     }
   }
 }
-let guide = new ASCii("Play guide")
-guide.setAlign(1 , ASCii.CENTER)
-guide.addRow(1 ,  "Bot Generates a random number {0,1,2,3,4,5}")
-.addRow(2 , "Generates a secret key")
-.addRow(3 ,"For honestyt he will display HMAC after you select a number he will show key , number you can generate hmac and equal with him hmac")
-.addRow(4, "you select a number {0,1,2,3,4,5}")
-.addRow(5, "Calculates the resultShows both the result and also the key and number")
-let help = new ASCii("Probability of the win fоr the user:");
 
+let guide = new ASCii("Play guide");
+guide.setAlign(1, ASCii.CENTER);
+guide
+  .addRow(1, "Bot Generates a random number")
+  .addRow(2, "Generates a secret key and prints HMAC")
+  .addRow(3, "After your guess, it shows key and number")
+  .addRow(4, "Winner selects first die")
+  .addRow(5, "Roll is fair via random + input % 6");
+
+let help = new ASCii("Probability of the win for the user:");
 function chanceToWin() {
   let arr = ["User dice V", ...args];
   help.addRow(arr);
   for (let i = 0; i < args.length; i++) {
     const row = [args[i].join(",")];
-
     for (let j = 0; j < args.length; j++) {
       if (i === j) {
         row.push(".3333");
         continue;
       }
-
-      let win = 0;
-      let lose = 0;
-
+      let win = 0, lose = 0;
       for (let a of args[i]) {
         for (let b of args[j]) {
           if (a > b) win++;
           else if (a < b) lose++;
         }
       }
-
       const total = win + lose;
       const res = total === 0 ? 0.5 : win / total;
       row.push(res.toFixed(4).slice(1));
     }
-
     help.addRow(row);
   }
 }
@@ -73,10 +71,7 @@ function chanceToWin() {
 check();
 chanceToWin();
 
-let dice = [];
-for (let i = 0; i < args.length; i++) {
-  dice[i] = new Die(args[i]);
-}
+let dice = args.map(faces => new Die(faces));
 
 function hmac(a, b) {
   const key = randomBytes(32).toString("hex");
@@ -85,91 +80,136 @@ function hmac(a, b) {
   return { hmac, rndm, key };
 }
 
+
 const rl = Readline.createInterface(process.stdin, process.stdout);
+let evdnc = hmac(0, 2);
 
-while (true) {
-  let evdnc = hmac(0, 2);
-  console.log(`\nI thought number, HMAC FOR HONESTY ${evdnc.hmac}`);
-  console.log("Try to predict my number in range of 0...1 \n0-0\n1-1\n?-help\nx-exit");
+console.log("Let's determine who makes the first move.");
+console.log(`I selected a random value in the range 0..1 (HMAC=${evdnc.hmac}).`);
+console.log("Try to guess my selection.\n0 - 0\n1 - 1\nX - exit\n? - help");
 
-  let slct = await rl.question("Your selection: ");
-  process.stdout.moveCursor(15, -1);
-  process.stdout.clearLine(1);
-  console.log(` ${slct}\n My number: ${evdnc.rndm} (key=${evdnc.key})`);
-
-  if (slct === "x") {
-    process.exit(1)
-  }
-
-  if (slct === "?") {
-    console.log("Help");
-    console.log(guide.toString())
-    console.log(help.toString());
-    continue;
-  }
-
-  let bi, bd, br, i, d, r;
-
-  if (slct == evdnc.rndm) {
-    console.log("You’ve won, you throw first");
-
-    for (let i = 0; i < dice.length; i++) {
-      console.log(`${i} - ${JSON.stringify(dice[i].faces)}`);
-    }
-
-    slct = await rl.question(`Your selection: `);
-    i = Number(slct);
-    d = dice[i];
-    console.log(`Youve selected die ${JSON.stringify(d.getfaces())}`)
-    r = d.roll();
-
-    evdnc = hmac(0, dice.length);
-    console.log(`HMAC FOR HONESTY ${evdnc.hmac}`);
-
-    bi = evdnc.rndm;
-    bd = dice[bi];
-    br = bd.roll();
-
-    console.log(`You rolled ${r} (your number ${i})`);
-    console.log(`I rolled ${br} (my number ${bi}) (KEY=${evdnc.key})`);
-
-    if (r > br) {
-      console.log("You win!");
-    } else if (r < br) {
-      console.log("I win!");
-    } else {
-      console.log("It's a draw!");
-    }
-
-  } else {
-    console.log("Youve lost, Iam throwing first");
-
-    evdnc = hmac(0, dice.length);
-    bi = evdnc.rndm;
-    bd = dice[bi];
-    console.log(`Ive selected die ${JSON.stringify(bd.getfaces())}`)
-    br = bd.roll();
-
-    
-
-    for (let i = 0; i < dice.length; i++) {
-      console.log(`${i} - ${JSON.stringify(dice[i].faces)}`);
-    }
-
-    slct = await rl.question(`Your selection: `);
-    i = Number(slct);
-    d = dice[i];
-    console.log(`Youve selected die ${JSON.stringify(d.getfaces())}`)
-    r = d.roll();
-    console.log(`Ive rolled ${br} (Die ${bi}) (KEY=${evdnc.key})`);
-    console.log(`Youve rolled ${r} (Die ${i})`);
-
-    if (r > br) {
-      console.log("You win!");
-    } else if (r < br) {
-      console.log("I win!");
-    } else {
-      console.log("Its a draw!");
-    }
-  }
+let slct2 = await rl.question("Your selection: ");
+if (slct2.toLowerCase() === "x") process.exit();
+if (slct2 === "?") {
+  console.log(guide.toString());
+  console.log(help.toString());
+  slct2 = await rl.question("Your selection: ");
 }
+
+console.log(`My selection: ${evdnc.rndm} (KEY=${evdnc.key}).`);
+
+let bi, bd, i, d;
+
+if (slct2 == evdnc.rndm) {
+  console.log("You make the first move.");
+  console.log("Choose your dice:");
+  dice.forEach((die, index) => console.log(`${index} - ${die.getfaces()}`));
+  console.log("X - exit\n? - help");
+
+  let index;
+  while (true) {
+    let input = await rl.question("Your selection: ");
+    if (input.toLowerCase() === "x") process.exit();
+    if (input === "?") {
+      console.log(guide.toString());
+      console.log(help.toString());
+      continue;
+    }
+    index = Number(input);
+    if (dice[index]) break;
+    else console.log("Invalid selection.");
+  }
+
+  i = index;
+  d = dice[i];
+  console.log(`You choose the ${d.getfaces()} dice.`);
+
+  do {
+    bi = randomInt(0, dice.length);
+  } while (bi === i);
+  bd = dice[bi];
+  console.log(`I make the second move and choose the ${bd.getfaces()} dice.`);
+
+} else {
+  console.log("I make the first move.");
+  bi = randomInt(0, dice.length);
+  bd = dice[bi];
+  console.log(`I choose the ${bd.getfaces()} dice.`);
+
+  console.log("Choose your dice:");
+  dice.forEach((die, index) => {
+    if (index !== bi) console.log(`${index} - ${die.getfaces()}`);
+  });
+  console.log("X - exit\n? - help");
+
+  let index;
+  while (true) {
+    let input = await rl.question("Your selection: ");
+    if (input.toLowerCase() === "x") process.exit();
+    if (input === "?") {
+      console.log(guide.toString());
+      console.log(help.toString());
+      continue;
+    }
+    index = Number(input);
+    if (dice[index] && index !== bi) break;
+    else console.log("Invalid selection.");
+  }
+
+  i = index;
+  d = dice[i];
+  console.log(`You choose the ${d.getfaces()} dice.`);
+}
+
+console.log("It's time for my roll.");
+evdnc = hmac(0, 6);
+console.log(`I selected a random value in the range 0..5 (HMAC=${evdnc.hmac}).`);
+console.log("Add your number modulo 6.");
+console.log("0 - 0\n1 - 1\n2 - 2\n3 - 3\n4 - 4\n5 - 5\nX - exit\n? - help");
+
+let mI = await rl.question("Your selection: ");
+let mN = Number(mI);
+let bri = (mN + evdnc.rndm) % 6;
+let br = bd.roll(bri);
+if (mI.toLowerCase() === "x") process.exit();
+if (mI === "?") {
+  console.log(guide.toString());
+  console.log(help.toString());
+  mI = await rl.question("Your selection: ");
+}
+
+console.log(`My number is ${evdnc.rndm} (KEY=${evdnc.key}).`);
+
+console.log(`The fair number generation result is ${mN} + ${evdnc.rndm} = ${bri} (mod 6).`);
+console.log(`My roll result is ${br}.`);
+
+console.log("It's time for your roll.");
+evdnc = hmac(0, 6);
+console.log(`I selected a random value in the range 0..5 (HMAC=${evdnc.hmac}).`);
+console.log("Add your number modulo 6.");
+console.log("0 - 0\n1 - 1\n2 - 2\n3 - 3\n4 - 4\n5 - 5\nX - exit\n? - help");
+
+let uM = await rl.question("Your selection: ");
+if (uM.toLowerCase() === "x") process.exit();
+if (uM === "?") {
+  console.log(guide.toString());
+  console.log(help.toString());
+  uM = await rl.question("Your selection: ");
+}
+
+let uN = Number(uM);
+console.log(`My number is ${evdnc.rndm} (KEY=${evdnc.key}).`);
+let uri = (uN + evdnc.rndm) % 6;
+let ur = d.roll(uri);
+console.log(`The fair number generation result is ${uN} + ${evdnc.rndm} = ${uri} (mod 6).`);
+console.log(`Your roll result is ${ur}.`);
+
+if (ur > br) {
+  console.log(`You win (${ur} > ${br})!`);
+} else if (ur < br) {
+  console.log(`I win (${br} > ${ur})!`);
+} else {
+  console.log("It's a draw!");
+}
+
+process.exit();

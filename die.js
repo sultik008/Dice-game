@@ -8,8 +8,7 @@ export default class Die {
   getfaces() {
     return this.faces;
   }
-  roll() {
-    const index = crypto.randomInt(this.faces.length)
-    return this.faces[index];
+  roll(i) {
+    return this.faces[i];
   }
 }
